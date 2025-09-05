@@ -1,6 +1,17 @@
-export default defineEventHandler(async event => {
-    
-    let response = await fetch("https://www.csnm.ca/api/clientRelation/find?key=c50fddc1-4029-4198-b0d0-9adb9dda7b8e", {
+<template>
+    <div>
+    <h1>Hello</h1>
+    <button type="submit" @click="createUser()">Get User</button>
+    <ul><li v-for="user in users">{{user.id}}</li></ul>
+    </div>
+</template>
+<script setup lang="ts">
+
+const users = <any>ref([]);
+users.value = await $fetch('api/listUsers');
+
+function createUser() {
+    $fetch("/api/addUser", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -29,7 +40,9 @@ export default defineEventHandler(async event => {
                 */
         })
     })
-    let result = await response.json()
-    console.log(result);
-    return result.result;
+}
+
+definePageMeta({
+    layout: 'home'
 })
+</script>
