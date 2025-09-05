@@ -1,14 +1,16 @@
 <template>
-    <div>
+    <v-container>
+    
     <h1>Hello</h1>
     <button type="submit" @click="createUser()">Get User</button>
     <ul><li v-for="user in users">{{user.id}}</li></ul>
-    </div>
+    
+    </v-container>
 </template>
 <script setup lang="ts">
 
 const users = <any>ref([]);
-users.value = await $fetch('api/listUsers');
+users.value = $fetch('api/listUsers');
 
 function createUser() {
     $fetch("/api/addUser", {
