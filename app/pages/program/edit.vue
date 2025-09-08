@@ -4,23 +4,24 @@ definePageMeta({
 });
 
 let zones = Intl.supportedValuesOf('timeZone').map((zone) => {
+  // format timezone to long offset
+  const longOffset = Intl.DateTimeFormat('en-us', {
+    timeZone: zone,
+    timeZoneName: 'longOffset',
+    offset: 'long'
+  })
+    .formatToParts()
+    .find((part) => part.type === 'timeZoneName').value;
+
   return {
     value: zone,
-    title:
-      zone +
-      ' -- (' +
-      Intl.DateTimeFormat('en-us', {
-        timeZone: zone,
-        timeZoneName: 'longOffset',
-        offset: 'long'
-      })
-        .formatToParts()
-        .find((part) => part.type === 'timeZoneName').value +
-      ')'
+    title: zone + ' -- (' + longOffset + ')'
   };
 });
 
-console.log(zones);
+let guessTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+console.log(guessTimezone);
 
 const program = reactive({
   programName: '',
@@ -35,6 +36,16 @@ const showTimePicker1 = ref(false);
 const showTimePicker2 = ref(false);
 const page = ref(1);
 const loading = ref(0);
+const uploadFile = ref({});
+
+const uploadRules = ref([
+  (value) => {
+    console.log(value);
+    if (typeof value === 'undefined') return true;
+    if (value.size <= 200000) return true;
+    return 'File size must be less than 2Mb';
+  }
+]);
 const nameRules = ref([
   (value) => {
     if (value) return true;
@@ -66,8 +77,18 @@ async function saveSettings() {
     method: 'POST',
     body: program
   });
+
   loading.value = 0;
   console.log('Saving Settings');
+}
+const reader = new FileReader();
+reader.onload = () => {
+  console.log('Reader Results:', reader.result);
+};
+
+function readfile() {
+  console.log('Upload File: ', uploadFile);
+  reader.readAsText(uploadFile.value);
 }
 </script>
 <template>
@@ -236,10 +257,71 @@ async function saveSettings() {
             <v-row>
               <v-col cols="6">
                 <v-select
+                  v-model="program.timezone"
+                  :model-value="
+                    program.timezone ? program.timezone : guessTimezone
+                  "
                   label="Timezone"
                   :items="zones"
                   variant="outlined"
                 ></v-select>
+              </v-col>
+              <v-col cols="6">
+                <v-date-input
+                  elevation="24"
+                  prepend-icon="mdi-calendar"
+                  variant="outlined"
+                  persistent-placeholder
+                  label="Mentors' Calendar End Date :"
+                  v-model="program.mentorCalendarEndDate"
+                  required
+                >
+                </v-date-input>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col md="3" sm="6" cols="6">
+                <v-switch
+                  v-model="program.bookOnlyOnce"
+                  label="Mentees can only book a mentor once"
+                ></v-switch>
+              </v-col>
+              <v-col md="3" sm="6" cols="6">
+                <v-switch
+                  v-model="program.publicGallery"
+                  label="Mentor Gallery publicly viewable"
+                ></v-switch>
+              </v-col>
+              <v-col md="3" sm="6" cols="6">
+                <v-select
+                  label="Max Sessions dates per Mentor:"
+                  variant="outlined"
+                  :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+                  v-model="program.maxMentorSessions"
+                ></v-select>
+              </v-col>
+              <v-col md="3" sm="6" cols="6">
+                <v-select
+                  label="Max Sessions a Mentee Can Book:"
+                  variant="outlined"
+                  :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+                  v-model="program.maxMenteeSessions"
+                ></v-select>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col md="6" sm="12" cols="12">
+                <v-list-subheader
+                  >Program Logo (max 520px by 240px):</v-list-subheader
+                >
+                <v-file-input
+                  prepend-icon="mdi-camera"
+                  variant="outlined"
+                  accept="image/png, image/jpeg, image/bmp"
+                  :rules="uploadRules"
+                  v-model="uploadFile"
+                  @update:model-value="readfile"
+                ></v-file-input>
               </v-col>
             </v-row>
           </v-container>
@@ -251,7 +333,7 @@ async function saveSettings() {
               :disabled="0"
               v-if="page === 2"
               @click="saveSettings"
-              >Save Settings</v-btn
+              >Save</v-btn
             >
             <v-btn v-else @click="page++">Next Page</v-btn>
           </template>
