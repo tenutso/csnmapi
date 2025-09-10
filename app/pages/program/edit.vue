@@ -1,4 +1,5 @@
 <script setup>
+import { onMounted } from 'vue';
 definePageMeta({
   layout: 'program'
 });
@@ -19,17 +20,23 @@ let zones = Intl.supportedValuesOf('timeZone').map((zone) => {
   };
 });
 
-let guessTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-console.log(guessTimezone);
-
 const program = reactive({
   programName: '',
-  firstname: '',
-  lastname: '',
-  email: '',
-  startTime: '',
-  endTime: ''
+  orgName: '',
+  contactName: '',
+  contactEmail: '',
+  contactPhone: '',
+  backupEmail: '',
+  menteeRegistrationEndDate: '',
+  menteeBookingStartDate: '',
+  menteeRegistrationEndTime: '',
+  menteeBookingStartTime: '',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  mentorCalendarEndDate: '',
+  bookOnlyOnce: true,
+  publicGallery: true,
+  maxMentorSessions: 4,
+  maxMenteeSessions: 3
 });
 
 const showTimePicker1 = ref(false);
@@ -37,6 +44,7 @@ const showTimePicker2 = ref(false);
 const page = ref(1);
 const loading = ref(0);
 const uploadFile = ref({});
+const valid = ref(true);
 
 const uploadRules = ref([
   (value) => {
@@ -72,19 +80,26 @@ const emailRules = ref([
 ]);
 
 async function saveSettings() {
-  loading.value = 1;
+  //loading.value = 1;
   await $fetch('/api/program/save', {
     method: 'POST',
     body: program
   });
 
-  loading.value = 0;
+  //loading.value = 0;
   console.log('Saving Settings');
 }
-const reader = new FileReader();
-reader.onload = () => {
-  console.log('Reader Results:', reader.result);
-};
+
+onMounted(async () => {
+  const settings = await $fetch('/api/program/read');
+  console.log('FETCH:', settings);
+  //Object.assign(program.value, settings);
+  Object.assign(program, settings);
+  const reader = new FileReader();
+  reader.onload = () => {
+    console.log('Reader Results:', reader.result);
+  };
+});
 
 function readfile() {
   console.log('Upload File: ', uploadFile);

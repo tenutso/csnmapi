@@ -7,9 +7,14 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.5",
     "nuxt": "^4.0.3",
     "temporal-polyfill": "^0.3.0",
     "vue": "^3.5.18",
