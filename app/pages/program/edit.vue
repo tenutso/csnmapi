@@ -41,7 +41,7 @@ const program = reactive({
 
 const showTimePicker1 = ref(false);
 const showTimePicker2 = ref(false);
-const page = ref(1);
+const page = ref(0);
 const loading = ref(0);
 const uploadFile = ref({});
 const valid = ref(true);
@@ -107,94 +107,99 @@ function readfile() {
 }
 </script>
 <template>
-  <v-container>
-    <v-form v-model="valid">
-      <v-stepper
+  <UContainer>
+    <UForm v-model="valid">
+      <UStepper
+        class="w-full"
         v-model="page"
-        :items="['Program Contact', 'Dates & Settings']"
-        hide-actions
+        :items="[
+          {
+            slot: 'contactinfo',
+            title: 'Program Contact',
+            desciption: '',
+            icon: 'i-lucide-house'
+          },
+          {
+            slot: 'datetimeinfo',
+            title: 'Dates & Settings',
+            desciption: '',
+            icon: 'i-lucide-calendar'
+          }
+        ]"
       >
-        <template #item.1>
-          <v-container>
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="program.programName"
-                  :rules="nameRules"
-                  variant="outlined"
-                  persistent-placeholder
-                  label="Program Name"
-                  required
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="program.orgName"
-                  :rules="nameRules"
-                  class="mx-auto"
-                  variant="outlined"
-                  persistent-placeholder
-                  label="Organization Name"
-                  required
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="program.contactName"
-                  :rules="nameRules"
-                  variant="outlined"
-                  persistent-placeholder
-                  label="Primary Contact Name"
-                  required
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="program.contactEmail"
-                  :counter="10"
-                  :rules="nameRules"
-                  variant="outlined"
-                  persistent-placeholder
-                  label="Contact Email"
-                  required
-                  hint="This is the email that appears on the website and gets notified when someone uses contact forms."
-                  persistent-hint
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="program.contactPhone"
-                  :rules="nameRules"
-                  variant="outlined"
-                  persistent-placeholder
-                  label="Contact Phone"
-                  required
-                  hint="This telephone number appears on the website."
-                  persistent-hint=""
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="program.backupEmail"
-                  :rules="nameRules"
-                  variant="outlined"
-                  persistent-placeholder
-                  label="Backup Contact Email (Optional)"
-                  hint="This email also would get notified when someone uses contact forms. This person also should be a registered administrator."
-                  persistent-hint
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-container>
+        <template #contactinfo="{ item }">
+          <div class="mx-auto py-10">
+            <div class="">
+              <UFormField
+                size="lg"
+                class="mb-5"
+                v-model="program.programName"
+                :rules="nameRules"
+                label="Program Name"
+                required
+                ><UInput class="w-full"></UInput
+              ></UFormField>
+            </div>
+            <div class="">
+              <UFormField
+                size="lg"
+                class="mb-5"
+                v-model="program.orgName"
+                :rules="nameRules"
+                label="Organization Name"
+                required
+                ><UInput class="w-full"></UInput
+              ></UFormField>
+
+              <UFormField
+                size="lg"
+                class="mb-5"
+                v-model="program.contactName"
+                :rules="nameRules"
+                variant="outlined"
+                persistent-placeholder
+                label="Primary Contact Name"
+                required
+                ><UInput class="w-full"></UInput
+              ></UFormField>
+            </div>
+            <div>
+              <UFormField
+                size="lg"
+                class="mb-5"
+                v-model="program.contactEmail"
+                :rules="nameRules"
+                label="Contact Email"
+                required
+                description="This is the email that appears on the website and gets notified when someone uses contact forms."
+                ><UInput class="w-full"></UInput
+              ></UFormField>
+              <UFormField
+                size="lg"
+                class="mb-5"
+                v-model="program.contactPhone"
+                :rules="nameRules"
+                label="Contact Phone"
+                required
+                description="This telephone number appears on the website."
+                ><UInput class="w-full"></UInput
+              ></UFormField>
+            </div>
+            <div class="">
+              <UFormField
+                size="lg"
+                class="mb-5"
+                v-model="program.backupEmail"
+                :rules="nameRules"
+                label="Backup Contact Email (Optional)"
+                description="This email also would get notified when someone uses contact forms. This person also should be a registered administrator."
+                ><UInput class="w-full"></UInput
+              ></UFormField>
+            </div>
+          </div>
         </template>
-        <template #item.2>
-          <v-container>
+        <template #datetimeinfo="{ item }">
+          <UContainer>
             <v-row>
               <v-col>
                 <p>
@@ -205,30 +210,32 @@ function readfile() {
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="12" md="6">
-                <v-date-input
-                  elevation="24"
-                  prepend-icon="mdi-calendar"
-                  variant="outlined"
-                  persistent-placeholder
-                  label="Mentee Registration Cutoff Date & Time:"
-                  v-model="program.menteeRegistrationEndDate"
-                  required
-                >
-                </v-date-input>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-date-input
-                  elevation="24"
-                  prepend-icon="mdi-calendar"
-                  variant="outlined"
-                  persistent-placeholder
-                  label="Mentee Sessions Booking Start Date & Time :"
-                  v-model="program.menteeBookingStartDate"
-                  required
-                >
-                </v-date-input>
-              </v-col>
+              <UPopover :content="{ align: 'start' }">
+                <UFormField label="Mentee Registration Cutoff Date & Time:"
+                  ><UInput
+                    :modelValue="program.menteeRegistrationEndDate"
+                  ></UInput>
+                </UFormField>
+                <template #content>
+                  <UCalendar
+                    v-model="program.menteeRegistrationEndDate"
+                    class="p-2"
+                  />
+                </template>
+              </UPopover>
+              <UPopover :content="{ align: 'start' }">
+                <UFormField label="Mentee Sessions Booking Start Date & Time :"
+                  ><UInput
+                    :modelValue="program.menteeBookingStartDate"
+                  ></UInput>
+                </UFormField>
+                <template #content>
+                  <UCalendar
+                    v-model="program.menteeBookingStartDate"
+                    class="p-2"
+                  />
+                </template>
+              </UPopover>
               <v-col cols="12" sm="6">
                 <v-text-field
                   variant="outlined"
@@ -339,23 +346,8 @@ function readfile() {
                 ></v-file-input>
               </v-col>
             </v-row>
-          </v-container>
+          </UContainer>
         </template>
-        <v-stepper-actions>
-          <template #next>
-            <v-btn
-              :loading="loading"
-              :disabled="0"
-              v-if="page === 2"
-              @click="saveSettings"
-              >Save</v-btn
-            >
-            <v-btn v-else @click="page++">Next Page</v-btn>
-          </template>
-          <template #prev>
-            <v-btn @click="page--">Previous</v-btn>
-          </template>
-        </v-stepper-actions>
 
         <!--
         <template v-slot:actions="{ next, prev }">
@@ -363,7 +355,20 @@ function readfile() {
           <v-btn @click="next">Next Page {{ page }}</v-btn>
         </template>
         -->
-      </v-stepper>
-    </v-form>
-  </v-container>
+      </UStepper>
+      <div class="flex gap-2 justify-between mt-4">
+        <UButton v-if="page > 0" @click="page--">Previous</UButton>
+        <div v-if="page == 0"></div>
+
+        <UButton
+          :loading="loading"
+          :disabled="0"
+          v-if="page === 2"
+          @click="saveSettings"
+          >Save</UButton
+        >
+        <UButton v-else @click="page++">Next Page</UButton>
+      </div>
+    </UForm>
+  </UContainer>
 </template>

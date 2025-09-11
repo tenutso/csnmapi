@@ -1,9 +1,12 @@
 <template>
-    <v-app>
-      <v-app-bar title="App bar"></v-app-bar>
-       
-    <v-main>
-    <slot />
-    </v-main>
-    </v-app>
+  <UApp>
+    <UHeader>
+      <template #title> <Logo class="h-6 w-auto" />My Header </template>
+    </UHeader>
+
+    <UMain>
+      <slot />
+    </UMain>
+    <UFooter>My Footer</UFooter>
+  </UApp>
 </template>
