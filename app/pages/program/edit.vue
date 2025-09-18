@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import * as z from "zod";
-
-let schema = z.object({
-  contactEmail: z.string().email("Invalid email"),
-  backupEmail: z.string().email("Invalid email"),
-});
-
-type Schema = z.output<typeof schema>;
+import type { FormSubmitEvent } from '@nuxt/ui'
+import { Temporal } from 'temporal-polyfill';
 
 definePageMeta({
   layout: "program",
 });
+
+let schema = z.object({
+  programName: z.string().min(1, "Name is required"),
+  orgName: z.string().min(1, "Name is required"),
+  contactName: z.string().min(1, "Name is required"),
+  contactEmail: z.string().email("Invalid email"),
+  contactPhone: z.string().regex(/^\+?[0-9\s-]{7,15}$/, "Invalid phone number"),
+  backupEmail: z.string().email("Invalid email"),
+});
+
+//type Schema = z.output<typeof schema>;
+
+
 
 let zones = Intl.supportedValuesOf("timeZone").map((zone) => {
   // format timezone to long offset
@@ -31,23 +39,24 @@ let zones = Intl.supportedValuesOf("timeZone").map((zone) => {
   };
 });
 
-const program = reactive({
-  programName: "",
-  orgName: "",
-  contactName: "",
-  contactEmail: "",
-  contactPhone: "",
-  backupEmail: "",
-  menteeRegistrationEndDate: "",
-  menteeBookingStartDate: "",
-  menteeRegistrationEndTime: "",
-  menteeBookingStartTime: "",
+const state = ref({
+  programName: "CSNM Mentorship Program",
+  orgName: "CSNM",
+  contactName: "Anthony Nijmeh",
+  contactEmail: "anthony@csnm.ca",
+  contactPhone: "416-441-0400",
+  backupEmail: "anthony@bondexec.com",
+  menteeRegistrationEndDate: Temporal.PlainDate.from(Temporal.Now.plainDateTimeISO()).toString(),
+  menteeBookingStartDate: Temporal.PlainDate.from(Temporal.Now.plainDateTimeISO()).toString(),
+  menteeRegistrationEndTime: "17:00",
+  menteeBookingStartTime: "08:00",
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  mentorCalendarEndDate: "",
+  mentorCalendarEndDate: Temporal.PlainDate.from(Temporal.Now.plainDateTimeISO()).toString(),
   bookOnlyOnce: true,
   publicGallery: true,
   maxMentorSessions: 4,
   maxMenteeSessions: 3,
+  
 });
 
 const showTimePicker1 = ref(false);
@@ -59,25 +68,51 @@ const valid = ref(true);
 
 const toast = useToast();
 
-async function saveSettings() {
-  //loading.value = 1;
-  //await $fetch("/api/program/save", {
-  //  method: "POST",
-  //  body: program,
-  //});
+async function saveSettings(event: any) {
+
+  
+  //loading.value = true;
+
+  await $fetch("/api/program/save", {
+    method: "POST",
+    body: event.data,
+  });
   toast.add({
     title: "Success",
     description: "The form has been submitted.",
     color: "success",
   });
   //loading.value = 0;
-  console.log("Saving Settings");
+  console.log(event.data);
 }
 
 onMounted(async () => {
+  loading.value = true;
   const settings = await $fetch("/api/program/read");
-  console.log("FETCH:", settings);
-
+  
+  if (settings) {
+    state.value = {
+      programName: settings.programName ?? "",
+      orgName: settings.orgName ?? "",
+      contactName: settings.contactName ?? "",
+      contactEmail: settings.contactEmail ?? "",
+      contactPhone: settings.contactPhone ?? "",
+      backupEmail: settings.backupEmail ?? "",
+      menteeRegistrationEndDate: settings.menteeRegistrationEndDate ?? state.value.menteeRegistrationEndDate, //Temporal.PlainDate.from(settings.menteeRegistrationEndDate ?? "").toString() ?? "",
+      menteeBookingStartDate: settings.menteeBookingStartDate ?? state.value.menteeBookingStartDate,
+      mentorCalendarEndDate: settings.mentorCalendarEndDate ?? state.value.mentorCalendarEndDate,
+      menteeRegistrationEndTime: Temporal.PlainTime.from(settings.menteeRegistrationEndDate ?? "12:00").toString() ?? "12:00",
+      menteeBookingStartTime: Temporal.PlainTime.from(settings.menteeRegistrationEndDate ?? "12:00").toString() ?? "12:00",
+      timezone: settings.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+      bookOnlyOnce: settings.bookOnlyOnce ?? true,
+      publicGallery: settings.publicGallery ?? true,
+      maxMentorSessions: settings.maxMentorSessions ?? 4,
+      maxMenteeSessions: settings.maxMenteeSessions ?? 3,
+    }
+  }
+  
+  console.log("FETCH:", state.value);
+  loading.value = false;
   //program.value = settings;
 
 });
@@ -94,37 +129,37 @@ function onFileChange() {
 </script>
 <template>
   <UContainer>
-    <UForm :schema="schema" :state="program" @submit="saveSettings">
+    <UForm :schema="schema" :state="state" @submit="saveSettings">
       <div class="mx-auto py-10">
         <div class="">
-          <UFormField size="lg" class="mb-5" v-model="program.programName" label="Program Name" required>
-            <UInput class="w-full"></UInput>
+          <UFormField size="lg" class="mb-5"  label="Program Name" name="programName" required>
+            <UInput class="w-full" v-model="state.programName"></UInput>
           </UFormField>
         </div>
         <div class="">
-          <UFormField size="lg" class="mb-5" v-model="program.orgName" label="Organization Name" required>
-            <UInput class="w-full"></UInput>
+          <UFormField size="lg" class="mb-5"  label="Organization Name" name="orgName" required>
+            <UInput class="w-full" v-model="state.orgName"></UInput>
           </UFormField>
 
-          <UFormField size="lg" class="mb-5" v-model="program.contactName" variant="outlined" persistent-placeholder
+          <UFormField size="lg" class="mb-5"  variant="outlined" name="contactName"
             label="Primary Contact Name" required>
-            <UInput class="w-full"></UInput>
+            <UInput class="w-full" v-model="state.contactName"></UInput>
           </UFormField>
         </div>
         <div>
-          <UFormField size="lg" class="mb-5" v-model="program.contactEmail" label="Contact Email" required
+          <UFormField size="lg" class="mb-5" name="contactEmail" label="Contact Email" required
             description="This is the email that appears on the website and gets notified when someone uses contact forms.">
-            <UInput class="w-full"></UInput>
+            <UInput class="w-full" v-model="state.contactEmail"></UInput>
           </UFormField>
-          <UFormField size="lg" class="mb-5" v-model="program.contactPhone" label="Contact Phone" required
+          <UFormField size="lg" class="mb-5"  name="contactPhone" label="Contact Phone" required
             description="This telephone number appears on the website.">
-            <UInput class="w-full"></UInput>
+            <UInput class="w-full" v-model="state.contactPhone"></UInput>
           </UFormField>
         </div>
         <div class="">
-          <UFormField size="lg" class="mb-5" v-model="program.backupEmail" label="Backup Contact Email (Optional)"
+          <UFormField size="lg" class="mb-5"  name="backupEmail" label="Backup Contact Email (Optional)"
             description="This email also would get notified when someone uses contact forms. This person also should be a registered administrator.">
-            <UInput class="w-full"></UInput>
+            <UInput class="w-full" v-model="state.backupEmail"></UInput>
           </UFormField>
         </div>
       </div>
@@ -136,35 +171,34 @@ function onFileChange() {
             below. This can be edited at any time.
           </p>
 
-        <UFormField label="Mentee Registration Cutoff Date & Time:">
-          <UInput type="date" v-model="program.menteeRegistrationEndDate" class="p-2"></UInput>
+        <UFormField name="menteeRegistrationEndDate" label="Mentee Registration Cutoff Date & Time:">
+          <UInput type="date" v-model="state.menteeRegistrationEndDate" class="p-2"></UInput>
         </UFormField>
 
-        <UFormField label="Mentee Sessions Booking Start Date & Time :">
-          <UInput type="date" v-model="program.menteeBookingStartDate" class="p-2"></UInput>
+        <UFormField name="menteeBookingStartDate" label="Mentee Sessions Booking Start Date & Time :">
+          <UInput type="date" v-model="state.menteeBookingStartDate" class="p-2"></UInput>
         </UFormField>
      
-        <USelect class="w-48 p-2" :v-model="program.menteeRegistrationEndTime" :items='["12:00", "1:00", "2:00"]' />
+        
           
-        <USelect class="w-48 p-2" :v-model="program.menteeBookingStartTime" :items='["12:00", "1:00", "2:00"]' />
+        <USelect class="w-48 p-2" v-model="state.menteeBookingStartTime" :items='["12:00", "13:00", "14:00", "15:00", "16:00", "17:00"]' />
+        <USelect name="menteeRegistrationEndTime" class="w-48 p-2" v-model="state.menteeRegistrationEndTime" :items='["12:00", "13:00", "14:00", "15:00", "16:00", "17:00"]' />
 
-
-          <USelect v-model="program.timezone" label="Timezone" :items="zones"></USelect>
+          <USelect v-model="state.timezone" label="Timezone" :items="zones"></USelect>
   
           <UFormField>
-          <UInput type="date" elevation="24" prepend-icon="mdi-calendar" persistent-placeholder
-            label="Mentors' Calendar End Date :" v-model="program.mentorCalendarEndDate" required>
+          <UInput type="date" name="mentorCalendarEndDate" label="Mentors' Calendar End Date :" v-model="state.mentorCalendarEndDate">
           </UInput>
           </UFormField>
       
-          <USwitch v-model="program.bookOnlyOnce" label="Mentees can only book a mentor once"></USwitch>
-          <USwitch v-model="program.publicGallery" label="Mentor Gallery publicly viewable"></USwitch>
+          <USwitch v-model="state.bookOnlyOnce" label="Mentees can only book a mentor once"></USwitch>
+          <USwitch v-model="state.publicGallery" label="Mentor Gallery publicly viewable"></USwitch>
         
           <USelect label="Max Sessions dates per Mentor:" 
-            :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" v-model="program.maxMentorSessions"></USelect>
+            :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" v-model="state.maxMentorSessions"></USelect>
         
           <USelect label="Max Sessions a Mentee Can Book:" 
-            :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" v-model="program.maxMenteeSessions"></USelect>
+            :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" v-model="state.maxMenteeSessions"></USelect>
         
           <p>Program Logo (max 520px by 240px):</p>
           <UFileUpload prepend-icon="mdi-camera" accept="image/png, image/jpeg, image/bmp"
@@ -172,7 +206,7 @@ function onFileChange() {
 
 
       <div class="flex gap-2 justify-between mt-4">
-        <UButton :loading="loading" @click="saveSettings">Save</UButton>
+        <UButton :loading="loading" type="submit">Save</UButton>
       </div>
     </UForm>
   </UContainer>

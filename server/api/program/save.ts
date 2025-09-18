@@ -17,10 +17,17 @@ function formatDateTime(date: any, time: any, timezone: any) {
 
 export default defineEventHandler(async (event) => {
   const requestBody = await readBody(event);
+
+  requestBody.menteeBookingStartDate = formatDateTime(requestBody.menteeBookingStartDate, requestBody.menteeBookingStartTime, requestBody.timezone);
+  requestBody.menteeRegistrationEndDate = formatDateTime(requestBody.menteeRegistrationEndDate, requestBody.menteeRegistrationEndTime, requestBody.timezone);
+  //requestBody.mentorCalendarEndDate =
+  delete requestBody.menteeRegistrationEndTime;
+  delete requestBody.menteeBookingStartTime;
+  
   //const db = useDatabase();
   const db = useDrizzle();
 
-  await db.insert(settings).values(requestBody);
+  //await db.insert(settings).values(requestBody);
 
   console.log(requestBody);
   /*

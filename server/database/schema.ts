@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
 export const settings = sqliteTable('settings', {
@@ -9,13 +10,12 @@ export const settings = sqliteTable('settings', {
   backupEmail: text(''),
   menteeRegistrationEndDate: text(''),
   menteeBookingStartDate: text(''),
-  menteeRegistrationEndTime: text(''),
-  menteeBookingStartTime: text(''),
   mentorCalendarEndDate: text(''),
-  bookOnlyOnce: text(''),
-  publicGallery: text(''),
-  maxMentorSessions: text(''),
-  maxMenteeSessions: text('')
+  timezone: text(''),
+  bookOnlyOnce: integer({mode: "boolean"}),
+  publicGallery: integer({mode: "boolean"}),
+  maxMentorSessions: integer({mode: "number"}),
+  maxMenteeSessions: integer({mode: "number"})
 });
 
 export const users = sqliteTable('users', {
